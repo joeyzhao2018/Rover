@@ -10,8 +10,8 @@ with open(_json_config) as data_file:
     config_json = json.load(data_file)
 
 
-motor_l=LargeMotor('outB')
-motor_r=LargeMotor('outA')
+motor_l=LargeMotor(config_json['motor1'])
+motor_r=LargeMotor(config_json['motor2'])
 _motors=[motor_l,motor_r]
 
 

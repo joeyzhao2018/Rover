@@ -1,4 +1,6 @@
 {
+  'motor1':'outB',
+  'motor2':'outC',
   'default':
   {
     'time_sp':1000,
