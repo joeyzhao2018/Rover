@@ -1,0 +1,19 @@
+{
+  'motor1':'outB',
+  'motor2':'outC',
+  'default':
+  {
+    'time_sp':1000,
+    'speed':500,
+    'duty_cycle_sp':90,
+    'full_speed':95,
+    'slow_down':30
+  },
+  'trun90':
+  {
+    'time_sp':1000,
+    'speed':500,
+  },
+  'wait_time': 3,
+
+}
