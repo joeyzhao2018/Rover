@@ -5,6 +5,9 @@ import os,json
 
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
 
+ir = InfraredSensor();assert ir.connected
+ts = TouchSensor();assert ts.connected
+
 
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
@@ -68,8 +71,7 @@ def start(duty_cycle_sp):
 
 def run_direct():
     btn = Button()
-    ir = InfraredSensor(); assert ir.connected
-    ts = TouchSensor(); assert ts.connected
+
 
 
     while not btn.any():
