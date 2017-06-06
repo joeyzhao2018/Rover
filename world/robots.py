@@ -31,5 +31,5 @@ class MyCompanion(object):
 
 
 
-    def go_straight_timed(self,time):
+    def run_until_btn(self):
         movements.run_direct()
