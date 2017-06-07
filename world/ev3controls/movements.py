@@ -59,6 +59,12 @@ def movebackward():
     wait_till_finish()
 
 
+def backup():
+    config=config_json['default']
+    for m in _motors:
+        m.stop(stop_action='brake')
+        m.run_timed(speed_sp=config['back_speed'], time_sp=config['back_time'])
+
 def stop():
     for m in _motors:
         m.stop(stop_action='brake')
@@ -121,7 +127,7 @@ def _obstacle_hander_2():#go around
     turnright()
     run_by_distance(10)
     turnleft()
-    return 10
+    return radius
 
 
 def cm_to_rots(length):
@@ -133,14 +139,15 @@ def cm_to_degrees(length):
 
 
 def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
-    starting_posn=motor_l.position()
+    starting_posn=motor_l.position
     distance_converted=cm_to_rots(distance)
 
     modification=0
 
-    while not (motor_l.position()-starting_posn-modification)>distance_converted:
+    while not (motor_l.position-starting_posn-modification)>distance_converted:
 
         if ts.is_pressed:
+
             modification=obstacle_handler()
 
         # Infrared sensor in proximity mode will measure distance to the closest object in front of it.
@@ -151,6 +158,7 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
             dc =config_json['default']['full_speed']
         else:
             # Obstacle ahead, slow down.
+            modification = obstacle_handler()
             dc = config_json['default']['slow_down']
 
         for m in _motors:
