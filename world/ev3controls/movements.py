@@ -1,16 +1,19 @@
 from time import sleep
-from ev3dev.ev3 import *
 
 import os,json
 
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
+config_json=None
+with open(_json_config) as data_file:
+    config_json = json.load(data_file)
+from ev3dev.ev3 import *
+
 
 ir = InfraredSensor();assert ir.connected
 ts = TouchSensor();assert ts.connected
 
 
-with open(_json_config) as data_file:
-    config_json = json.load(data_file)
+
 
 
 motor_l=LargeMotor(config_json['motor1'])
@@ -27,21 +30,21 @@ def wait_till_finish():
 def turnleft():
     config=config_json['turn90']
     motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=-config['speed'])
+    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
 
 
 def turnright():
     config = config_json['turn90']
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=-config['speed'])
+    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
     wait_till_finish()
 
 
 def turnback():
     config = config_json['turn90']
-    motor_l.run_timed(time_sp=2*config['time_sp'], speed_sp=-config['speed'])
-    motor_r.run_timed(time_sp=2*config['time_sp'], speed_sp=-config['speed'])
+    motor_l.run_timed(time_sp=2*config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_r.run_timed(time_sp=2*config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
 
 
@@ -55,7 +58,7 @@ def moveforward():
 def movebackward():
     config = config_json['default']
     for m in _motors:
-        m.run_timed(time_sp=config['time_sp'], speed_sp=-config['speed'])
+        m.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
 
 
@@ -71,9 +74,8 @@ def stop():
 
 
 def wait():
-    Sound.speak("I am waiting")
-    sleep(config_json['wait_time'])
-    Sound.speak("I will go now")
+    Sound.speak("i'm waiting")
+    sleep(float(config_json['wait_time']))
 
 
 def start(duty_cycle_sp):
@@ -113,25 +115,31 @@ def run_direct():
 
 def _obstacle_hander_1():#wait
     stop()
-    wait()
+    print("i'm waiting for it to move away")
+    distance = ir.proximity
+    while distance < 60:
+        wait()
+        distance=ir.proximity
     start(0)
     return 0
 
 
-def _obstacle_hander_2():#go around
+def _obstacle_hander_2(radius=45):#go around
     stop()
     turnleft()
-    run_by_distance(10)
+    run_by_distance(radius)
     turnright()
-    run_by_distance(10)
+    run_by_distance(radius)
     turnright()
-    run_by_distance(10)
+    run_by_distance(radius)
     turnleft()
+
+    start(0)
     return radius
 
 
 def cm_to_rots(length):
-    return 0.056841*length
+    return length/0.056841
 
 
 def cm_to_degrees(length):
@@ -140,14 +148,14 @@ def cm_to_degrees(length):
 
 def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
     starting_posn=motor_l.position
+    print(starting_posn)
     distance_converted=cm_to_rots(distance)
 
     modification=0
-
+    start(0)
     while not (motor_l.position-starting_posn-modification)>distance_converted:
-
+        print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
         if ts.is_pressed:
-
             modification=obstacle_handler()
 
         # Infrared sensor in proximity mode will measure distance to the closest object in front of it.
@@ -155,13 +163,18 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
 
         if distance > 60:
             # Path is clear, run at full speed.
+            print("i can see {} clear in front of me".format(distance))
             dc =config_json['default']['full_speed']
         else:
+            print("i notice someting {} in front of me".format(distance))
             # Obstacle ahead, slow down.
+
             modification = obstacle_handler()
             dc = config_json['default']['slow_down']
+        print("setting dc={}".format(dc))
 
         for m in _motors:
             m.duty_cycle_sp = dc
-
+        print("sleeping 0.1")
         sleep(0.1)
+    stop()
