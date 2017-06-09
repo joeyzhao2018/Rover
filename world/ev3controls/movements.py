@@ -1,4 +1,9 @@
 from time import sleep
+import rpyc
+conn = rpyc.classic.connect('ev3dev') # host name or IP address of the EV3
+ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+# import ev3dev.ev3 as ev3
+
 
 import os,json
 
@@ -6,18 +11,15 @@ _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.jso
 config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
-from ev3dev.ev3 import *
-
-
-ir = InfraredSensor();assert ir.connected
-ts = TouchSensor();assert ts.connected
 
 
 
+ir = ev3.InfraredSensor()
+ts = ev3.TouchSensor()
 
 
-motor_l=LargeMotor(config_json['motor1'])
-motor_r=LargeMotor(config_json['motor2'])
+motor_l=ev3.LargeMotor(config_json['motor1'])
+motor_r=ev3.LargeMotor(config_json['motor2'])
 _motors=[motor_l,motor_r]
 
 
@@ -83,34 +85,6 @@ def start(duty_cycle_sp):
         duty_cycle_sp=config_json['default']['duty_cycle_sp']
     for m in _motors:
         m.run_direct(duty_cycle_sp=duty_cycle_sp)
-
-
-def run_direct():
-    btn = Button()
-    while not btn.any():
-
-        if ts.is_pressed:
-            # We bumped an obstacle.
-            # Back away, turn and go in other direction.
-            stop()
-            wait()
-            start(0)
-
-        # Infrared sensor in proximity mode will measure distance to the closest
-        # object in front of it.
-        distance = ir.proximity
-
-        if distance > 60:
-            # Path is clear, run at full speed.
-            dc =config_json['default']['full_speed']
-        else:
-            # Obstacle ahead, slow down.
-            dc = config_json['default']['slow_down']
-
-        for m in _motors:
-            m.duty_cycle_sp = dc
-
-        sleep(0.1)
 
 
 def _obstacle_hander_1():#wait
