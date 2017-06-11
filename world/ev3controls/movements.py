@@ -76,7 +76,7 @@ def stop():
 
 
 def wait():
-    Sound.speak("i'm waiting")
+    ev3.Sound.speak("i'm waiting")
     sleep(float(config_json['wait_time']))
 
 
