@@ -1,11 +1,10 @@
 from time import sleep
 import rpyc
-conn = rpyc.classic.connect('ev3dev') # host name or IP address of the EV3
+conn = rpyc.classic.connect(host='169.254.246.127',port="8888") # host name or IP address of the EV3
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
 # import ev3dev.ev3 as ev3
-
-
 import os,json
+
 
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
 config_json=None
@@ -21,6 +20,8 @@ ts = ev3.TouchSensor()
 motor_l=ev3.LargeMotor(config_json['motor1'])
 motor_r=ev3.LargeMotor(config_json['motor2'])
 _motors=[motor_l,motor_r]
+
+
 
 try:
     motor_hand=ev3.LargeMotor(config_json['motor3'])
@@ -122,6 +123,7 @@ def _obstacle_hander_2(radius=45):#go around
 
 
 def cm_to_rots(length):
+    length=float(length)
     return length/0.056841
 
 
@@ -130,16 +132,17 @@ def cm_to_degrees(length):
 
 
 def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
+    distance_float=float(distance)
     starting_posn=motor_l.position
     print(starting_posn)
-    distance_converted=cm_to_rots(distance)
+    distance_converted=cm_to_rots(distance_float)
 
     modification=0
     start(0)
     while not (motor_l.position-starting_posn-modification)>distance_converted:
         print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
-        if ts.is_pressed:
-            modification=obstacle_handler()
+        # if ts.is_pressed:
+        #     modification=obstacle_handler()
 
         # Infrared sensor in proximity mode will measure distance to the closest object in front of it.
         distance = ir.proximity

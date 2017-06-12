@@ -1,6 +1,7 @@
 import socket
 import sys
 
+
 HOST, PORT = "localhost", 9999
 data = " ".join(sys.argv[1:])
 

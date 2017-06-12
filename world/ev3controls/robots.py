@@ -64,6 +64,10 @@ class MyCompanion(object):
         movements.fetchCoffee()
         self.go_to_location(self.territory_list[starting])
 
+
+    def stop(self):
+        movements.stop()
+
     def react(self,*args):
         action=self.__getattribute__(args[0])
         if hasattr(action, '__call__'):
