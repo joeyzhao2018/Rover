@@ -9,7 +9,7 @@ class MyCompanion(object):
 
     facingDirection=Direction.NORTH
     territory_list=["Employee_Desk_A","MeetingRoom","CoffeeLocation"]
-    curr_location_index=None  # if 0 meaning it's at Employee_Desk_A, etc...
+    curr_location_index=0  # if 0 meaning it's at Employee_Desk_A, etc...
     territory_routing=[[None,[("turn_to_direction","East"),("run_by_distance","100")],[("go_to_location","MeetingRoom"),("go_to_location","CoffeeLocation")]],
                        [[("turn_to_direction","West"),("run_by_distance","100")],None,[("turn_to_direction","South"),("run_by_distance","200")]],
                        [[("go_to_location","MeetingRoom"),("go_to_location","Employee_Desk_A")],[("turn_to_direction","North"),("run_by_distance","200")],None]]
