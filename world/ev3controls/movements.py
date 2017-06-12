@@ -22,6 +22,11 @@ motor_l=ev3.LargeMotor(config_json['motor1'])
 motor_r=ev3.LargeMotor(config_json['motor2'])
 _motors=[motor_l,motor_r]
 
+try:
+    motor_hand=ev3.LargeMotor(config_json['motor3'])
+except:
+    motor_hand=None
+
 
 
 def wait_till_finish():
@@ -75,8 +80,12 @@ def stop():
         m.stop(stop_action='brake')
 
 
+def speak(words):
+    ev3.Sound.speak(words)
+
+
 def wait():
-    ev3.Sound.speak("i'm waiting")
+    speak("i'm waiting")
     sleep(float(config_json['wait_time']))
 
 
@@ -152,3 +161,10 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
         print("sleeping 0.1")
         sleep(0.1)
     stop()
+
+
+def fetchCoffee():
+    if motor_hand is not None:
+        motor_hand.run_to_abs_pos()
+    else:
+        speak("I don't have hands")
