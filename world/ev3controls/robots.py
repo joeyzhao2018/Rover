@@ -10,14 +10,41 @@ class MyCompanion(object):
     facingDirection=Direction.NORTH
     territory_list=["Employee_Desk_A","MeetingRoom","CoffeeLocation"]
     curr_location_index=0  # if 0 meaning it's at Employee_Desk_A, etc...
-    territory_routing=[[None,[("turn_to_direction","East"),("run_by_distance","100")],[("go_to_location","MeetingRoom"),("go_to_location","CoffeeLocation")]],
-                       [[("turn_to_direction","West"),("run_by_distance","100")],None,[("turn_to_direction","South"),("run_by_distance","200")]],
-                       [[("go_to_location","MeetingRoom"),("go_to_location","Employee_Desk_A")],[("turn_to_direction","North"),("run_by_distance","200")],None]]
+    territory_routing = [[None, None, None],
+                         [[("turn_to_direction", "West"), ("run_by_distance", "100")], None, None],
+                         [[("go_to_location", "MeetingRoom"), ("go_to_location", "Employee_Desk_A")],[("turn_to_direction", "North"), ("run_by_distance", "200")], None]]
+
+    # territory_routing=[[None,[("turn_to_direction","East"),("run_by_distance","100")],[("go_to_location","MeetingRoom"),("go_to_location","CoffeeLocation")]],
+    #                    [[("turn_to_direction","West"),("run_by_distance","100")],None,[("turn_to_direction","South"),("run_by_distance","200")]],
+    #                    [[("go_to_location","MeetingRoom"),("go_to_location","Employee_Desk_A")],[("turn_to_direction","North"),("run_by_distance","200")],None]]
 
     def __init__(self, direction=None):
         if direction is not None:
             self.facingDirection=direction
 
+    def _reverse(self, origin_i, destination_i):
+        instruction_tuples=self.territory_routing[destination_i][origin_i]
+        reversed_instructions = []
+        turning_cursor = 0
+        runing_cursor = 0
+        _turning = "turn_to_direction"
+        _running="run_by_distance"
+        _go_to_flag="go_to_location"
+        for instruction_tuple in instruction_tuples:
+            if instruction_tuple[0] == _go_to_flag:
+                return [instruction_tuples[1],(_go_to_flag,self.territory_list[destination_i])]
+            elif instruction_tuple[0] == _turning:
+                opposite_direction_s = str(opposite(strDirection(instruction_tuple[1]))).split(".")[1]
+                reversed_instructions.insert(turning_cursor, (_turning,opposite_direction_s))
+                turning_cursor+=1
+                runing_cursor=turning_cursor
+            elif instruction_tuple[0] == _running:
+                reversed_instructions.insert(runing_cursor,instruction_tuple)
+                turning_cursor=0
+                runing_cursor+=1
+            else:
+                raise Exception("Unknown instruction")
+        return reversed_instructions
 
     def turn_to_direction(self, direction):
 

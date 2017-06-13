@@ -1,6 +1,9 @@
 {
+  "host":"169.254.253.74",
+  "port":"8888",
   "motor1":"outC",
   "motor2":"outB",
+  "motor3":"outA",
 
   "default":
   {
@@ -13,8 +16,8 @@
     "back_time":"1000"
   },
   "turn90": {
-    "time_sp":"900",
-    "speed":"500"
+    "time_sp":"1080",
+    "speed":"400",
   },
   "wait_time": "3"
 

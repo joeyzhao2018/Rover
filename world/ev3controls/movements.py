@@ -1,33 +1,27 @@
 from time import sleep
-import rpyc
-conn = rpyc.classic.connect(host='169.254.246.127',port="8888") # host name or IP address of the EV3
-ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
-# import ev3dev.ev3 as ev3
 import os,json
-
-
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
 config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
 
-
+import rpyc
+conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
+ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+# import ev3dev.ev3 as ev3
 
 ir = ev3.InfraredSensor()
-ts = ev3.TouchSensor()
-
 
 motor_l=ev3.LargeMotor(config_json['motor1'])
 motor_r=ev3.LargeMotor(config_json['motor2'])
 _motors=[motor_l,motor_r]
 
-
-
 try:
-    motor_hand=ev3.LargeMotor(config_json['motor3'])
+    ts = ev3.TouchSensor()
+    motor_hand=ev3.MediumMotor(config_json['motor3'])
+    motor_hand.run_to_abs_pos(speed_sp=20,position_sp=100)
 except:
     motor_hand=None
-
 
 
 def wait_till_finish():
@@ -51,8 +45,8 @@ def turnright():
 
 def turnback():
     config = config_json['turn90']
-    motor_l.run_timed(time_sp=2*config['time_sp'], speed_sp=0-int(config['speed']))
-    motor_r.run_timed(time_sp=2*config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
+    motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
     wait_till_finish()
 
 
@@ -75,6 +69,7 @@ def backup():
     for m in _motors:
         m.stop(stop_action='brake')
         m.run_timed(speed_sp=config['back_speed'], time_sp=config['back_time'])
+
 
 def stop():
     for m in _motors:
@@ -171,3 +166,6 @@ def fetchCoffee():
         motor_hand.run_to_abs_pos()
     else:
         speak("I don't have hands")
+
+
+stop()
