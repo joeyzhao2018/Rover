@@ -61,7 +61,7 @@ class MyCompanion(object):
 
         for instruction_tuple in instruction_tuples:
             if instruction_tuple[0] == _go_to_flag:
-                return [instruction_tuples[1],(_go_to_flag,self.territory_list[destination_i])]
+                return [instruction_tuples[0],(_go_to_flag,self.territory_list[destination_i])]
             elif instruction_tuple[0] == _turning:
                 opposite_direction_s = str(opposite(strDirection(instruction_tuple[1]))).split(".")[1]
                 reversed_instructions.insert(turning_cursor, (_turning,opposite_direction_s))
@@ -127,7 +127,7 @@ class MyCompanion(object):
         last_known_name=self.territory_list[last_known_index]
 
         ref_for_dummy=[(_go_to_flag,last_known_name),(_go_to_flag,name)]
-        for i in range(last_known_index,len(self.territory_list)):
+        for i in range(last_known_index+1,len(self.territory_list)):
             self.territory_routing[i].insert(last_known_index,ref_for_dummy)
 
         self.territory_list.insert(last_known_index,name)#register the location

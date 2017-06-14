@@ -8,10 +8,10 @@ with open(_json_config) as data_file:
 
 cm_to_rots=float(config_json["cm_to_rots"])
 
-# import rpyc
-# conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
-# ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
-import ev3dev.ev3 as ev3
+import rpyc
+conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
+ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+# import ev3dev.ev3 as ev3
 
 ir = ev3.InfraredSensor()
 
@@ -53,11 +53,7 @@ def turnback():
     wait_till_finish()
 
 
-def moveforward():
-    starting_posn=motor_l.position
-    p = Process(target=run_straight())
-    p.start()
-    return starting_posn
+
 
 
 def movebackward():
@@ -124,14 +120,20 @@ def _obstacle_hander_2(radius=45):#go around
 def cm_to_degrees(length):
     return 20.462778*length
 
+
 def run_straight():
     start(0)
     distance = ir.proximity
-    while distance<=0:
+    while distance!=0:
         distance = ir.proximity
+
         if distance > 60:
             dc =config_json['default']['full_speed']
+
+            print("i can see {} clear in front of me".format(distance))
         else:
+            print("i notice someting {} in front of me".format(distance))
+
             _obstacle_hander_1()
             dc = config_json['default']['slow_down']
 
@@ -140,6 +142,11 @@ def run_straight():
         sleep(0.1)
 
 
+def moveforward():
+    starting_posn=motor_l.position
+    p = Process(target=run_straight)
+    p.start()
+    return starting_posn
 
 def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
     distance_float=float(distance)
