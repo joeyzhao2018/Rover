@@ -1,14 +1,17 @@
 from time import sleep
+from multiprocessing import Process
 import os,json
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
 config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
 
-import rpyc
-conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
-ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
-# import ev3dev.ev3 as ev3
+cm_to_rots=float(config_json["cm_to_rots"])
+
+# import rpyc
+# conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
+# ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+import ev3dev.ev3 as ev3
 
 ir = ev3.InfraredSensor()
 
@@ -51,10 +54,10 @@ def turnback():
 
 
 def moveforward():
-    config = config_json['default']
-    for m in _motors:
-        m.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    wait_till_finish()
+    starting_posn=motor_l.position
+    p = Process(target=run_straight())
+    p.start()
+    return starting_posn
 
 
 def movebackward():
@@ -74,6 +77,7 @@ def backup():
 def stop():
     for m in _motors:
         m.stop(stop_action='brake')
+    return motor_l.position
 
 
 def speak(words):
@@ -117,24 +121,35 @@ def _obstacle_hander_2(radius=45):#go around
     return radius
 
 
-def cm_to_rots(length):
-    length=float(length)
-    return length/0.056841
-
-
 def cm_to_degrees(length):
     return 20.462778*length
+
+def run_straight():
+    start(0)
+    distance = ir.proximity
+    while distance<=0:
+        distance = ir.proximity
+        if distance > 60:
+            dc =config_json['default']['full_speed']
+        else:
+            _obstacle_hander_1()
+            dc = config_json['default']['slow_down']
+
+        for m in _motors:
+            m.duty_cycle_sp = dc
+        sleep(0.1)
+
 
 
 def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
     distance_float=float(distance)
     starting_posn=motor_l.position
     print(starting_posn)
-    distance_converted=cm_to_rots(distance_float)
+    distance_converted=distance_float/cm_to_rots
 
     modification=0
     start(0)
-    while not (motor_l.position-starting_posn-modification)>distance_converted:
+    while not float(motor_l.position-starting_posn-modification)>distance_converted:
         print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
         # if ts.is_pressed:
         #     modification=obstacle_handler()
@@ -168,4 +183,3 @@ def fetchCoffee():
         speak("I don't have hands")
 
 
-stop()

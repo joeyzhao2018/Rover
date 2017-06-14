@@ -4,6 +4,7 @@
   "motor1":"outC",
   "motor2":"outB",
   "motor3":"outA",
+  "cm_to_rots":"0.056841",
 
   "default":
   {

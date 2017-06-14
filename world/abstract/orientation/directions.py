@@ -10,11 +10,25 @@ class Direction(IntEnum):
 
 
 _oppo=[Direction.SOUTH,Direction.NORTH,Direction.WEST,Direction.EAST]
+_left=[Direction.WEST,Direction.EAST,Direction.SOUTH,Direction.NORTH]
+_right=[Direction.EAST,Direction.WEST,Direction.NORTH,Direction.SOUTH]
 
 
 def opposite(direction):
     if isinstance(direction, Direction):
         return _oppo[direction]
+    else:
+        raise TypeError("Not a valid Direction {}".format(repr(direction)))
+
+def left(direction):
+    if isinstance(direction, Direction):
+        return _left[direction]
+    else:
+        raise TypeError("Not a valid Direction {}".format(repr(direction)))
+
+def right(direction):
+    if isinstance(direction, Direction):
+        return _right[direction]
     else:
         raise TypeError("Not a valid Direction {}".format(repr(direction)))
 
