@@ -1,3 +1,8 @@
+import configparser
+cp = configparser.ConfigParser()
+cp.read("map.cfg")
+folder = eval(cp.get("map", "names"), {}, {})
+
 import os,json
 _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.json')
 config_json=None

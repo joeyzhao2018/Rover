@@ -1,34 +1,38 @@
 #!/usr/bin/env python3
 from world.abstract.orientation.directions import Direction, opposite, left, right, strDirection
 from world.ev3controls import movements
+import threading
+import configparser
+from random import randint
+from time import sleep
 
-_turning = "turn_to_direction"
-_running = "run_by_distance"
-_go_to_flag = "go_to_location"
+cp = configparser.ConfigParser()
+cp.read("../ev3controls/map.cfg")
+known_routings = eval(cp.get("map", "routings"), {}, {})
+known_names = eval(cp.get("map", "names"), {}, {})
+_turning = "turn"
+_running = "run"
+_go_to_flag = "go"
 
 
 class MyCompanion(object):
 
     facingDirection=Direction.NORTH
-    territory_list=["Employee_Desk_A","MeetingRoom","CoffeeLocation"]
-    curr_location_index=0  # if 0 meaning it's at Employee_Desk_A, etc...
-    territory_routing =  [[[], [], []],
-                         [[("turn_to_direction", "West"), ("run_by_distance", "50")], [], []],
-                         [[("go_to_location", "MeetingRoom"), ("go_to_location", "Employee_Desk_A")],[("turn_to_direction", "North"), ("run_by_distance", "60")], []]]
-
-    # territory_routing=[[[],[("turn_to_direction","East"),("run_by_distance","50")],[("go_to_location","MeetingRoom"),("go_to_location","CoffeeLocation")]],
-    #                    [[("turn_to_direction","West"),("run_by_distance","50")],[],[("turn_to_direction","South"),("run_by_distance","60")]],
-    #                    [[("go_to_location","MeetingRoom"),("go_to_location","Employee_Desk_A")],[("turn_to_direction","North"),("run_by_distance","60")],[]]]
-
+    territory_list=known_names
+    curr_location_index=0  # if 0 meaning it's at territory_list[0], etc...
+    territory_routing =  known_routings
     wandering_memory=[]
     starting_posn=0
     ending_posn=0
+    roaming=False
+    in_transit=False
 
     def __init__(self, direction=None):
         if direction is not None:
             self.facingDirection=direction
+        # self.start_roaming()
 
-    def turn_to_direction(self, direction):
+    def turn(self, direction):
         if not isinstance(direction, Direction):
             try:
                 direction=strDirection(direction)
@@ -50,7 +54,7 @@ class MyCompanion(object):
         movements.speak("Now facing {}".format(direction))
         return str(self.facingDirection)
 
-    def run_by_distance(self, distance):
+    def run(self, distance):
         movements.run_by_distance(distance)
 
     def _reverse(self, origin_i, destination_i):
@@ -75,13 +79,12 @@ class MyCompanion(object):
                 raise Exception("Unknown instruction")
         return reversed_instructions
 
-
     def _do_as_instructed(self,instructions):
         for instruction_tuple in instructions:
             myfunc=self.__getattribute__(instruction_tuple[0])
             myfunc(instruction_tuple[1])
 
-    def go_to_location(self,destination):
+    def go(self,destination):
         if self.wandering_memory: #go back to last known location if you've ben wandering
             instructions=self._reverse(self.wandering_memory)
             self._do_as_instructed(instructions)
@@ -98,6 +101,11 @@ class MyCompanion(object):
             self._do_as_instructed(instructions)
         self.curr_location_index=destination_index
         return("Arrived at {}".format(destination))
+
+    def go_to_location(self,destination):
+        self.in_transit=True
+        self.go(destination)
+        self.in_transit=False
 
     def turnLeft(self):
         movements.turnleft()
@@ -138,6 +146,21 @@ class MyCompanion(object):
             ref_for_dummy.append([(_go_to_flag,last_known_name),(_go_to_flag,self.territory_list[j])])
         self.territory_routing.insert(last_known_index,ref_by_dummy)
 
+    def __start_roaming(self):
+        self.roaming=True
+        while self.roaming:
+            self.go_to_location(self.territory_list[randint(0, len(self.territory_list))])
+
+    def start_roaming(self):
+        t1 = threading.Thread(target=self.__start_roaming)
+        t1.start()
+        return("Started roaming")
+
+    def stop_roaming(self):
+        self.roaming=False
+        while self.in_transit:
+            sleep(1)
+        return("I just stopped roaming around")
 
     def react(self,*args):
         action=self.__getattribute__(args[0])
