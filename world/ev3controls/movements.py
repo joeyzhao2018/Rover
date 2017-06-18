@@ -8,10 +8,10 @@ with open(_json_config) as data_file:
 
 cm_to_rots=float(config_json["cm_to_rots"])
 
-# import rpyc
-# conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
-# ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
-import ev3dev.ev3 as ev3
+import rpyc
+conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
+ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
+#import ev3dev.ev3 as ev3
 
 ir = ev3.InfraredSensor()
 
@@ -28,7 +28,7 @@ except:
 
 
 def wait_till_finish():
-    while any(m.state for m in _motors):
+    while any([m.state for m in _motors]):
         sleep(0.1)
 
 
