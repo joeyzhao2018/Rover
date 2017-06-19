@@ -75,6 +75,7 @@ def backup():
 
 
 def stop():
+    print("I'm stopping")
     for m in _motors:
         m.stop(stop_action='brake')
     return motor_l.position

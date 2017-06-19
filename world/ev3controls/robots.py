@@ -42,19 +42,24 @@ class MyCompanion(object):
         if self.facingDirection==direction:
             pass
         elif self.facingDirection==opposite(direction):
+            print("turning 180 degree")
             movements.turnback()
         else:
             left_yes=(self.facingDirection-direction)%2 if self.facingDirection<2 else (self.facingDirection-direction)%2-1
             #Because if N or S, you need to turn left when the difference is odd; if W or E, turn left when the difference is even
             if left_yes:
+                print("turning left")
                 movements.turnleft()
             else:
+                print("turning right")
                 movements.turnright()
         self.facingDirection=direction
+        print("Now facing {}".format(direction))
         movements.speak("Now facing {}".format(direction))
         return str(self.facingDirection)
 
     def run(self, distance):
+        print("running by distance {}".format(distance))
         movements.run_by_distance(distance)
 
     def _reverse(self, origin_i, destination_i):
@@ -65,7 +70,7 @@ class MyCompanion(object):
 
         for instruction_tuple in instruction_tuples:
             if instruction_tuple[0] == _go_to_flag:
-                return [instruction_tuples[1],(_go_to_flag,self.territory_list[destination_i])]
+                return [instruction_tuples[0],(_go_to_flag,self.territory_list[destination_i])]
             elif instruction_tuple[0] == _turning:
                 opposite_direction_s = str(opposite(strDirection(instruction_tuple[1]))).split(".")[1]
                 reversed_instructions.insert(turning_cursor, (_turning,opposite_direction_s))
@@ -91,7 +96,10 @@ class MyCompanion(object):
             self.wandering_memory=[]
         destination_index=self.territory_list.index(destination)
         movements.speak("Target Destination {}".format(destination))
+        print("Target Destination {}".format(destination))
         if destination_index==self.curr_location_index:
+            print("I am already at {}".format(destination))
+
             return("I am already at {}".format(destination))
         elif destination_index>self.curr_location_index:
             instructions=self._reverse(self.curr_location_index,destination_index)
@@ -100,6 +108,7 @@ class MyCompanion(object):
             instructions=self.territory_routing[self.curr_location_index][destination_index]
             self._do_as_instructed(instructions)
         self.curr_location_index=destination_index
+        print ("Arrived at {}".format(destination))
         return("Arrived at {}".format(destination))
 
     def go_to_location(self,destination):
@@ -149,7 +158,9 @@ class MyCompanion(object):
     def __start_roaming(self):
         self.roaming=True
         while self.roaming:
-            self.go_to_location(self.territory_list[randint(0, len(self.territory_list))])
+            target_index=randint(0, len(self.territory_list)-1)
+            print("target index {}".format(target_index))
+            self.go_to_location(self.territory_list[target_index])
 
     def start_roaming(self):
         t1 = threading.Thread(target=self.__start_roaming)
@@ -160,6 +171,7 @@ class MyCompanion(object):
         self.roaming=False
         while self.in_transit:
             sleep(1)
+        movements.wait_till_finish()
         return("I just stopped roaming around")
 
     def react(self,*args):
