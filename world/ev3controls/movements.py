@@ -28,7 +28,7 @@ except:
 
 
 def wait_till_finish():
-    while any(m.state for m in _motors):
+    while any([m.state for m in _motors]):
         sleep(0.1)
 
 
@@ -71,6 +71,7 @@ def backup():
 
 
 def stop():
+    print("I'm stopping")
     for m in _motors:
         m.stop(stop_action='brake')
     return motor_l.position
@@ -120,13 +121,11 @@ def _obstacle_hander_2(radius=45):#go around
 def cm_to_degrees(length):
     return 20.462778*length
 
-
 def run_straight():
     start(0)
     distance = ir.proximity
     while distance!=0:
         distance = ir.proximity
-
         if distance > 60:
             dc =config_json['default']['full_speed']
 
