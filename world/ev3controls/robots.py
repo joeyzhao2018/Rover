@@ -42,19 +42,24 @@ class MyCompanion(object):
         if self.facingDirection==direction:
             pass
         elif self.facingDirection==opposite(direction):
+            print("turning 180 degree")
             movements.turnback()
         else:
             left_yes=(self.facingDirection-direction)%2 if self.facingDirection<2 else (self.facingDirection-direction)%2-1
             #Because if N or S, you need to turn left when the difference is odd; if W or E, turn left when the difference is even
             if left_yes:
+                print("turning left")
                 movements.turnleft()
             else:
+                print("turning right")
                 movements.turnright()
         self.facingDirection=direction
+        print("Now facing {}".format(direction))
         movements.speak("Now facing {}".format(direction))
         return str(self.facingDirection)
 
     def run(self, distance):
+        print("running by distance {}".format(distance))
         movements.run_by_distance(distance)
 
     def _reverse(self, origin_i, destination_i):
@@ -93,6 +98,8 @@ class MyCompanion(object):
         movements.speak("Target Destination {}".format(destination))
         print("Origin and  Destionation is ====>", self.curr_location_index, destination)
         if destination_index==self.curr_location_index:
+            print("I am already at {}".format(destination))
+
             return("I am already at {}".format(destination))
         elif destination_index>self.curr_location_index:
             instructions=self._reverse(self.curr_location_index,destination_index)
@@ -101,6 +108,7 @@ class MyCompanion(object):
             instructions=self.territory_routing[self.curr_location_index][destination_index]
             self._do_as_instructed(instructions)
         self.curr_location_index=destination_index
+        print ("Arrived at {}".format(destination))
         return("Arrived at {}".format(destination))
 
     def go_to_location(self,destination):

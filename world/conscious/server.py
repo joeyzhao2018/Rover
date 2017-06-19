@@ -1,7 +1,7 @@
 import socketserver
 
 from world.ev3controls import robots
-
+from world.ev3controls.movements import stop
 
 class MyCompanionTCPHandler(socketserver.BaseRequestHandler):
     """
@@ -24,15 +24,22 @@ class MyCompanionTCPHandler(socketserver.BaseRequestHandler):
         self.request.sendall(bytes(data + "\n", "utf-8"))
 
 
+class MyTCPServer(socketserver.TCPServer):
+    def server_close(self):
+        self.socket.close()
+        stop()
 
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 9999
 
     # Create the server, binding to localhost on port 9999
-    server = socketserver.TCPServer((HOST, PORT), MyCompanionTCPHandler)
+    server = MyTCPServer((HOST, PORT), MyCompanionTCPHandler)
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
-    server.serve_forever()
-
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    server.server_close()
