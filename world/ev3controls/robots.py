@@ -9,8 +9,8 @@ import os.path as path
 mapcfg=path.join(path.dirname(path.abspath(__file__)),"map.cfg")
 cp = configparser.ConfigParser()
 cp.read(mapcfg)
-known_routings = eval(cp.get("map2", "routings"), {}, {})
-known_names = eval(cp.get("map2", "names"), {}, {})
+known_routings = eval(cp.get("map3", "routings"), {}, {})
+known_names = eval(cp.get("map3", "names"), {}, {})
 _turning = "turn"
 _running = "run"
 _go_to_flag = "go"
@@ -61,7 +61,7 @@ class MyCompanion(object):
 
     def run(self, distance):
         print("running by distance {}".format(distance))
-        movements.run_by_distance(distance)
+        movements.run_by_distance(distance,self.facingDirection)
 
     def _reverse(self, origin_i, destination_i):
         instruction_tuples=self.territory_routing[destination_i][origin_i]

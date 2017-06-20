@@ -7,6 +7,10 @@
   "cm_to_rots":"0.056841",
   "distance_detect":"15",
   "duty_diff":"1.5",
+  "turn_left_color":"2",
+  "turn_right_color":"5",
+  "go_color":"1",
+  "stop_color":"0",
   "default":
   {
     "time_sp":"1000",

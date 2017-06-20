@@ -8,6 +8,12 @@ with open(_json_config) as data_file:
 distance_detect=float(config_json["distance_detect"])
 cm_to_rots=float(config_json["cm_to_rots"])
 duty_diff=float(config_json["duty_diff"])
+color_mode=True
+turn_left_sig=int(config_json["turn_left_color"])
+turn_right_sig=int(config_json["turn_right_color"])
+go_sig=int(config_json["go_color"])
+stop_sig=int(config_json["stop_color"])
+
 import rpyc
 conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
@@ -35,33 +41,11 @@ def wait_till_finish():
         sleep(0.1)
 
 
-def turnleft():
-    config=config_json['turnLeft']
+def turn_adjust():
     config_1 = config_json['default']
     duty_cycle= config_1['duty_cycle_sp']
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
-    wait_till_finish()
-    if col.color != 1:
-        while col.color != 1:
-            print("color is", col.color)
-            print("moving to find black")
-            motor_l.run_direct(duty_cycle_sp=duty_cycle)
-            motor_r.run_direct(duty_cycle_sp=0 - int(duty_cycle))
-        print("+++ color Found is ", col.color)
-        motor_l.duty_cycle_sp=0
-        motor_r.duty_cycle_sp=0
-
-
-def turnright():
-    config = config_json['turnRight']
-    config_2 = config_json['default']
-    duty_cycle = config_2['duty_cycle_sp']
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
-    wait_till_finish()
-    if col.color != 1:
-        while col.color != 1:
+    if color_mode and col.color != 1:
+        while col.color != go_sig:
             print("color is", col.color)
             print("moving to find black")
             motor_r.run_direct(duty_cycle_sp=duty_cycle)
@@ -71,12 +55,32 @@ def turnright():
         motor_l.duty_cycle_sp=0
 
 
+def turnleft():
+    config=config_json['turnLeft']
+    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
+    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    wait_till_finish()
+    if color_mode:
+        turn_adjust()
+
+
+def turnright():
+    config = config_json['turnRight']
+    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
+    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    wait_till_finish()
+    if color_mode:
+        turn_adjust()
+
+
 
 def turnback():
     config = config_json['turn180']
     motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
     motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
     wait_till_finish()
+    if color_mode:
+        turn_adjust()
 
 
 def movebackward():
@@ -170,7 +174,8 @@ def moveforward():
     p.start()
     return starting_posn
 
-def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
+
+def run_by_distance(distance, facingDirection, obstacle_handler=_obstacle_hander_1):
     distance_float=float(distance)
     starting_posn=motor_l.position
     print(starting_posn)
@@ -179,11 +184,11 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
     modification=0
     start(0)
     while not float(motor_l.position-starting_posn-modification)>distance_converted:
-        print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
-        # if ts.is_pressed:
-        #     modification=obstacle_handler()
 
-        # Infrared sensor in proximity mode will measure distance to the closest object in front of it.
+        if color_mode and color_sensor.color!=go_sig:
+            ajust(facingDirection)
+        sleep(0.1)
+        print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
         distance = ir.proximity
 
         if distance > distance_detect:
@@ -200,6 +205,7 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
 
         motor_l.duty_cycle_sp = max(dc-duty_diff,0)
         motor_r.duty_cycle_sp = max(dc,0)
+
         print("sleeping 0.1")
         sleep(0.1)
     stop()
@@ -215,30 +221,38 @@ color_sensor=ev3.ColorSensor()
 color_sensor.mode='COL-REFLECT'
 
 
-def ajust(turn_left_sig,turn_right_sig,go_sig,stop_sig):
+def ajust(facingDirection):
     while color_sensor.color != go_sig and color_sensor.color != stop_sig:
         print("adjust color {}".format(str(color_sensor.color)))
         if color_sensor.color == turn_left_sig:
-            motor_l.speed_sp = 10
-            motor_r.speed_sp = -10
+            if facingDirection in [0,3]:
+                motor_l.duty_cycle_sp = 30
+                motor_r.duty_cycle_sp = 0
+            else:
+                motor_l.duty_cycle_sp = 0
+                motor_r.duty_cycle_sp = 30
         elif color_sensor.color == turn_right_sig:
-            motor_r.speed_sp = 10
-            motor_l.speed_sp = -10
+            if facingDirection in [0,3]:
+                motor_l.duty_cycle_sp = 0
+                motor_r.duty_cycle_sp = 30
+            else:
+                motor_l.duty_cycle_sp = 30
+                motor_r.duty_cycle_sp = 0
         sleep(0.1)
 
 
-def run_by_color(turn_left_sig,turn_right_sig,go_sig,stop_sig):
+def run_by_color():
     print("color {}".format(str(color_sensor.color)))
-    motor_l.run_direct(speed_sp=0)
-    motor_r.run_direct(speed_sp=0)
+    motor_l.run_direct(duty_cycle_sp=0)
+    motor_r.run_direct(duty_cycle_sp=0)
     while color_sensor.color !=stop_sig:
-        motor_l.speed_sp=50
-        motor_r.speed_sp=50
+        motor_l.duty_cycle_sp=50
+        motor_r.duty_cycle_sp=50
         print("going color {}".format(str(color_sensor.color)))
         if color_sensor.color!=go_sig:
             if color_sensor.color==stop_sig:
                 stop()
             else:
-                ajust(turn_left_sig,turn_right_sig,go_sig,stop_sig)
+                ajust()
         sleep(0.1)
     stop()
