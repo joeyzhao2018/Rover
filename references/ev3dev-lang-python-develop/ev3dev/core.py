@@ -2202,6 +2202,7 @@ class GyroSensor(Sensor):
 
         return self.value(0), self.value(1)
 
+
 class InfraredSensor(Sensor):
 
     """

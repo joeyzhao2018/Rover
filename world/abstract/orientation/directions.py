@@ -8,10 +8,9 @@ class Direction(IntEnum):
     WEST=3
 
 
-
 _oppo=[Direction.SOUTH,Direction.NORTH,Direction.WEST,Direction.EAST]
-_left=[Direction.WEST,Direction.EAST,Direction.SOUTH,Direction.NORTH]
-_right=[Direction.EAST,Direction.WEST,Direction.NORTH,Direction.SOUTH]
+_left=[Direction.WEST,Direction.EAST,Direction.NORTH,Direction.SOUTH]
+_right=[Direction.EAST,Direction.WEST,Direction.SOUTH,Direction.NORTH]
 
 
 def opposite(direction):

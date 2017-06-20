@@ -5,19 +5,19 @@ _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.jso
 config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
-
+distance_detect=int(config_json["distance_detect"])
 cm_to_rots=float(config_json["cm_to_rots"])
-
+duty_diff=int(config_json["duty_diff"])
 import rpyc
 conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
 # import ev3dev.ev3 as ev3
 
 ir = ev3.InfraredSensor()
-
+print(ir.proximity)
 motor_l=ev3.LargeMotor(config_json['motor1'])
 motor_r=ev3.LargeMotor(config_json['motor2'])
-_motors=[motor_l,motor_r]
+_motors=[motor_r,motor_l]
 
 try:
     ts = ev3.TouchSensor()
@@ -33,27 +33,24 @@ def wait_till_finish():
 
 
 def turnleft():
-    config=config_json['turn90']
+    config=config_json['turnLeft']
     motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
     motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
 
 
 def turnright():
-    config = config_json['turn90']
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    config = config_json['turnRight']
     motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
+    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
 
 
 def turnback():
-    config = config_json['turn90']
+    config = config_json['turn180']
     motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
     motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
     wait_till_finish()
-
-
-
 
 
 def movebackward():
@@ -97,7 +94,7 @@ def _obstacle_hander_1():#wait
     stop()
     print("i'm waiting for it to move away")
     distance = ir.proximity
-    while distance < 60:
+    while distance < distance_detect:
         wait()
         distance=ir.proximity
     start(0)
@@ -126,18 +123,18 @@ def run_straight():
     distance = ir.proximity
     while distance!=0:
         distance = ir.proximity
-        if distance > 60:
-            dc =config_json['default']['full_speed']
+        if distance > distance_detect:
+            dc =int(config_json['default']['full_speed'])
 
             print("i can see {} clear in front of me".format(distance))
         else:
             print("i notice someting {} in front of me".format(distance))
 
             _obstacle_hander_1()
-            dc = config_json['default']['slow_down']
+            dc = int(config_json['default']['slow_down'])
 
-        for m in _motors:
-            m.duty_cycle_sp = dc
+        motor_l.duty_cycle_sp = max(dc - duty_diff,0)
+        motor_r.duty_cycle_sp = max(dc,0)
         sleep(0.1)
 
 
@@ -163,20 +160,20 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
         # Infrared sensor in proximity mode will measure distance to the closest object in front of it.
         distance = ir.proximity
 
-        if distance > 60:
+        if distance > distance_detect:
             # Path is clear, run at full speed.
             print("i can see {} clear in front of me".format(distance))
-            dc =config_json['default']['full_speed']
+            dc =int(config_json['default']['full_speed'])
         else:
             print("i notice someting {} in front of me".format(distance))
             # Obstacle ahead, slow down.
 
             modification = obstacle_handler()
-            dc = config_json['default']['slow_down']
+            dc = int(config_json['default']['slow_down'])
         print("setting dc={}".format(dc))
 
-        for m in _motors:
-            m.duty_cycle_sp = dc
+        motor_l.duty_cycle_sp = max(dc-duty_diff,0)
+        motor_r.duty_cycle_sp = max(dc,0)
         print("sleeping 0.1")
         sleep(0.1)
     stop()

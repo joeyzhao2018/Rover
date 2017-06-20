@@ -5,9 +5,10 @@ import threading
 import configparser
 from random import randint
 from time import sleep
-
+import os.path as path
+mapcfg=path.join(path.dirname(path.abspath(__file__)),"map.cfg")
 cp = configparser.ConfigParser()
-cp.read("../ev3controls/map.cfg")
+cp.read(mapcfg)
 known_routings = eval(cp.get("map2", "routings"), {}, {})
 known_names = eval(cp.get("map2", "names"), {}, {})
 _turning = "turn"
