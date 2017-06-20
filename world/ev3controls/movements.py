@@ -189,4 +189,34 @@ def fetchCoffee():
     else:
         speak("I don't have hands")
 
+color_sensor=ev3.ColorSensor()
+color_sensor.mode='COL-REFLECT'
 
+
+def ajust(turn_left_sig,turn_right_sig,go_sig,stop_sig):
+    while color_sensor.color != go_sig and color_sensor.color != stop_sig:
+        print("adjust color {}".format(str(color_sensor.color)))
+        if color_sensor.color == turn_left_sig:
+            motor_l.speed_sp = 10
+            motor_r.speed_sp = -10
+        elif color_sensor.color == turn_right_sig:
+            motor_r.speed_sp = 10
+            motor_l.speed_sp = -10
+        sleep(0.1)
+
+
+def run_by_color(turn_left_sig,turn_right_sig,go_sig,stop_sig):
+    print("color {}".format(str(color_sensor.color)))
+    motor_l.run_direct(speed_sp=0)
+    motor_r.run_direct(speed_sp=0)
+    while color_sensor.color !=stop_sig:
+        motor_l.speed_sp=50
+        motor_r.speed_sp=50
+        print("going color {}".format(str(color_sensor.color)))
+        if color_sensor.color!=go_sig:
+            if color_sensor.color==stop_sig:
+                stop()
+            else:
+                ajust(turn_left_sig,turn_right_sig,go_sig,stop_sig)
+        sleep(0.1)
+    stop()
