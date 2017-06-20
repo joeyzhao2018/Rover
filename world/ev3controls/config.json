@@ -1,34 +1,37 @@
 {
-  "host":"169.254.67.30",
+  "host":"169.254.226.69",
   "port":"8888",
   "motor1":"outC",
   "motor2":"outB",
   "motor3":"outA",
   "cm_to_rots":"0.056841",
   "distance_detect":"15",
-  "duty_diff":"10",
+  "duty_diff":"1.5",
   "default":
   {
     "time_sp":"1000",
     "speed":"500",
     "duty_cycle_sp":"90",
-    "full_speed":"30",
-    "slow_down":"5",
+    "full_speed":"50",
+    "slow_down":"0",
     "back_speed":"-100",
     "back_time":"1000"
   },
   "turnLeft": {
-    "time_sp":"1065",
+    "time_sp_l":"1067",
+    "time_sp_r":"1067",
     "time_sp_1":"1118",
     "speed":"400"
   },
   "turnRight": {
-    "time_sp":"1040",
+    "time_sp_l":"1082",
+    "time_sp_r":"1082",
     "time_sp_1":"1118",
     "speed":"400"
   },
   "turn180":{
-    "time_sp":"1035",
+    "time_sp_l":"1058",
+    "time_sp_r":"1058",
     "time_sp_1":"1110",
 
     "speed":"400"

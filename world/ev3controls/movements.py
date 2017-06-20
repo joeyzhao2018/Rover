@@ -5,9 +5,9 @@ _json_config=os.path.join(os.path.dirname(os.path.abspath(__file__)),'config.jso
 config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
-distance_detect=int(config_json["distance_detect"])
+distance_detect=float(config_json["distance_detect"])
 cm_to_rots=float(config_json["cm_to_rots"])
-duty_diff=int(config_json["duty_diff"])
+duty_diff=float(config_json["duty_diff"])
 import rpyc
 conn = rpyc.classic.connect(host=config_json['host'],port=config_json['port']) # host name or IP address of the EV3
 ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
@@ -34,29 +34,33 @@ def wait_till_finish():
 
 def turnleft():
     config=config_json['turnLeft']
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_l.run_timed(time_sp=float(config['time_sp_l']), speed_sp=float(config['speed']))
+    sleep(4)
+    motor_r.run_timed(time_sp=float(config['time_sp_r']), speed_sp=0-float(config['speed']))
     wait_till_finish()
 
 
 def turnright():
     config = config_json['turnRight']
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_r.run_timed(time_sp=float(config['time_sp_l']), speed_sp=float(config['speed']))
+    sleep(4)
+    motor_l.run_timed(time_sp=float(config['time_sp_r']), speed_sp=0-float(config['speed']))
     wait_till_finish()
 
 
 def turnback():
-    config = config_json['turn180']
-    motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
-    motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
+    turnleft()
+    turnleft()
+    # config = config_json['turn180']
+    # motor_l.run_timed(time_sp=2*float(config['time_sp']), speed_sp=0-float(config['speed']))
+    # motor_r.run_timed(time_sp=2*float(config['time_sp']), speed_sp=float(config['speed']))
     wait_till_finish()
 
 
 def movebackward():
     config = config_json['default']
     for m in _motors:
-        m.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+        m.run_timed(time_sp=config['time_sp'], speed_sp=0-float(config['speed']))
     wait_till_finish()
 
 
@@ -64,7 +68,7 @@ def backup():
     config=config_json['default']
     for m in _motors:
         m.stop(stop_action='brake')
-        m.run_timed(speed_sp=config['back_speed'], time_sp=config['back_time'])
+        m.run_timed(speed_sp=float(config['back_speed']), time_sp=config['back_time'])
 
 
 def stop():
@@ -124,14 +128,14 @@ def run_straight():
     while distance!=0:
         distance = ir.proximity
         if distance > distance_detect:
-            dc =int(config_json['default']['full_speed'])
+            dc =float(config_json['default']['full_speed'])
 
             print("i can see {} clear in front of me".format(distance))
         else:
             print("i notice someting {} in front of me".format(distance))
 
             _obstacle_hander_1()
-            dc = int(config_json['default']['slow_down'])
+            dc = float(config_json['default']['slow_down'])
 
         motor_l.duty_cycle_sp = max(dc - duty_diff,0)
         motor_r.duty_cycle_sp = max(dc,0)
@@ -163,13 +167,13 @@ def run_by_distance(distance, obstacle_handler=_obstacle_hander_1):
         if distance > distance_detect:
             # Path is clear, run at full speed.
             print("i can see {} clear in front of me".format(distance))
-            dc =int(config_json['default']['full_speed'])
+            dc =float(config_json['default']['full_speed'])
         else:
             print("i notice someting {} in front of me".format(distance))
             # Obstacle ahead, slow down.
 
             modification = obstacle_handler()
-            dc = int(config_json['default']['slow_down'])
+            dc = float(config_json['default']['slow_down'])
         print("setting dc={}".format(dc))
 
         motor_l.duty_cycle_sp = max(dc-duty_diff,0)
