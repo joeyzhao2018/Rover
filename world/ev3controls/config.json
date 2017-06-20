@@ -1,5 +1,5 @@
 {
-  "host":"169.254.226.69",
+  "host":"169.254.138.165",
   "port":"8888",
   "motor1":"outC",
   "motor2":"outB",
@@ -35,6 +35,10 @@
     "time_sp_1":"1110",
 
     "speed":"400"
+  },
+    "slightTurn":{
+
+    "speed":"100"
   },
 
   "wait_time": "3"
