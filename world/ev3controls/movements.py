@@ -15,6 +15,9 @@ ev3 = conn.modules['ev3dev.ev3']      # import ev3dev.ev3 remotely
 
 ir = ev3.InfraredSensor()
 print(ir.proximity)
+col = ev3.ColorSensor()
+col.mode = 'COL-REFLECT'
+print(col.color)
 motor_l=ev3.LargeMotor(config_json['motor1'])
 motor_r=ev3.LargeMotor(config_json['motor2'])
 _motors=[motor_r,motor_l]
@@ -34,23 +37,53 @@ def wait_till_finish():
 
 def turnleft():
     config=config_json['turnLeft']
+    config_1 = config_json['default']
+    duty_cycle= config_1['duty_cycle_sp']
     motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
     motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
+    if col.color != 1:
+        while col.color != 1:
+            print("color is", col.color)
+            print("moving to find black")
+            motor_l.run_direct(duty_cycle_sp=duty_cycle)
+            motor_r.run_direct(duty_cycle_sp=0 - int(duty_cycle))
+        print("+++ color Found is ", col.color)
+        motor_l.duty_cycle_sp=0
+        motor_r.duty_cycle_sp=0
 
 
 def turnright():
     config = config_json['turnRight']
+    config_2 = config_json['default']
+    duty_cycle = config_2['duty_cycle_sp']
     motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
     motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
     wait_till_finish()
+    if col.color != 1:
+        while col.color != 1:
+            print("color is", col.color)
+            print("moving to find black")
+            motor_r.run_direct(duty_cycle_sp=duty_cycle)
+            motor_l.run_direct(duty_cycle_sp=0 - int(duty_cycle))
+        print("color Found is ", col.color)
+        motor_r.duty_cycle_sp=0
+        motor_l.duty_cycle_sp=0
+
 
 
 def turnback():
     config = config_json['turn180']
+    duty_cycle = config_json['duty_cycle_sp']
     motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
     motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
     wait_till_finish()
+    if col.color != 1:
+        while col.color != 1:
+            motor_r.start(duty_cycle)
+            motor_l.start(duty_cycle)
+        motor_r.stop()
+        motor_l.stop()
 
 
 def movebackward():
