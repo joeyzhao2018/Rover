@@ -6,12 +6,14 @@ config_json=None
 with open(_json_config) as data_file:
     config_json = json.load(data_file)
 distance_detect=float(config_json["distance_detect"])
+adjusting_dc=float(config_json["adjusting_dc"])
 cm_to_rots=float(config_json["cm_to_rots"])
 duty_diff=float(config_json["duty_diff"])
 color_mode=True
 turn_left_sig=int(config_json["turn_left_color"])
 turn_right_sig=int(config_json["turn_right_color"])
 go_sig=int(config_json["go_color"])
+go_sig_alt=int(config_json["go_color_alter"])
 stop_sig=int(config_json["stop_color"])
 
 import rpyc
@@ -41,15 +43,19 @@ def wait_till_finish():
         sleep(0.1)
 
 
-def turn_adjust():
+def turn_adjust(left_or_right):
     config_1 = config_json['default']
     duty_cycle= config_1['duty_cycle_sp']
     if color_mode and col.color != 1:
-        while col.color != go_sig:
+        while col.color not in [go_sig,go_sig_alt,turn_right_sig,left_or_right]:
             print("color is", col.color)
             print("moving to find black")
-            motor_r.run_direct(duty_cycle_sp=duty_cycle)
-            motor_l.run_direct(duty_cycle_sp=0 - int(duty_cycle))
+            if left_or_right=='right':
+                motor_r.run_direct(duty_cycle_sp=duty_cycle)
+                motor_l.run_direct(duty_cycle_sp=0 - int(duty_cycle))
+            else:
+                motor_l.run_direct(duty_cycle_sp=duty_cycle)
+                motor_r.run_direct(duty_cycle_sp=0 - int(duty_cycle))
         print("color Found is ", col.color)
         motor_r.duty_cycle_sp=0
         motor_l.duty_cycle_sp=0
@@ -57,30 +63,30 @@ def turn_adjust():
 
 def turnleft():
     config=config_json['turnLeft']
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_l.run_timed(time_sp=config['time_sp_l'], speed_sp=config['speed'])
+    motor_r.run_timed(time_sp=config['time_sp_r'], speed_sp=0-int(config['speed']))
     wait_till_finish()
     if color_mode:
-        turn_adjust()
+        turn_adjust('left')
 
 
 def turnright():
     config = config_json['turnRight']
-    motor_r.run_timed(time_sp=config['time_sp'], speed_sp=config['speed'])
-    motor_l.run_timed(time_sp=config['time_sp'], speed_sp=0-int(config['speed']))
+    motor_r.run_timed(time_sp=config['time_sp_r'], speed_sp=config['speed'])
+    motor_l.run_timed(time_sp=config['time_sp_l'], speed_sp=0-int(config['speed']))
     wait_till_finish()
     if color_mode:
-        turn_adjust()
+        turn_adjust('right')
 
 
 
 def turnback():
     config = config_json['turn180']
-    motor_l.run_timed(time_sp=2*int(config['time_sp']), speed_sp=0-int(config['speed']))
-    motor_r.run_timed(time_sp=2*int(config['time_sp']), speed_sp=int(config['speed']))
+    motor_l.run_timed(time_sp=2*int(config['time_sp_l']), speed_sp=0-int(config['speed']))
+    motor_r.run_timed(time_sp=2*int(config['time_sp_r']), speed_sp=int(config['speed']))
     wait_till_finish()
     if color_mode:
-        turn_adjust()
+        turn_adjust('right')
 
 
 def movebackward():
@@ -93,8 +99,9 @@ def movebackward():
 def backup():
     config=config_json['default']
     for m in _motors:
-        m.stop(stop_action='brake')
-        m.run_timed(speed_sp=float(config['back_speed']), time_sp=config['back_time'])
+        # m.stop(stop_action='brake')
+        m.duty_cycle_sp=float(config['back_speed'])
+        # m.run_timed(speed_sp=float(config['back_speed']), time_sp=config['back_time'])
 
 
 def stop():
@@ -175,39 +182,37 @@ def moveforward():
     return starting_posn
 
 
-def run_by_distance(distance, facingDirection, obstacle_handler=_obstacle_hander_1):
+def run_by_distance(distance, facingDirection):
     distance_float=float(distance)
     starting_posn=motor_l.position
     print(starting_posn)
     distance_converted=distance_float/cm_to_rots
-
-    modification=0
+    # modification=0
     start(0)
-    while not float(motor_l.position-starting_posn-modification)>distance_converted:
+    while not float(motor_l.position-starting_posn)>distance_converted:
 
-        if color_mode and color_sensor.color!=go_sig:
+        if color_mode and col.color not in [go_sig, go_sig_alt]:
+            # if col.color==stop_sig:
+            #     while col.color==stop_sig:
+            #         backup()
+            #         sleep(0.4)
             ajust(facingDirection)
-        sleep(0.1)
-        print("currently moved: {0}, target: {1}".format(motor_l.position-starting_posn-modification,distance_converted))
         distance = ir.proximity
 
         if distance > distance_detect:
-            # Path is clear, run at full speed.
-            print("i can see {} clear in front of me".format(distance))
+            # print("i can see {} clear in front of me".format(distance))
             dc =float(config_json['default']['full_speed'])
         else:
-            print("i notice someting {} in front of me".format(distance))
+            # print("i notice someting {} in front of me".format(distance))
             # Obstacle ahead, slow down.
-
-            modification = obstacle_handler()
+            _obstacle_hander_1()
             dc = float(config_json['default']['slow_down'])
-        print("setting dc={}".format(dc))
+        # print("setting dc={}".format(dc))
 
         motor_l.duty_cycle_sp = max(dc-duty_diff,0)
         motor_r.duty_cycle_sp = max(dc,0)
 
-        print("sleeping 0.1")
-        sleep(0.1)
+        # print("sleeping 0.1")
     stop()
 
 
@@ -217,42 +222,42 @@ def fetchCoffee():
     else:
         speak("I don't have hands")
 
-color_sensor=ev3.ColorSensor()
-color_sensor.mode='COL-REFLECT'
-
 
 def ajust(facingDirection):
-    while color_sensor.color != go_sig and color_sensor.color != stop_sig:
-        print("adjust color {}".format(str(color_sensor.color)))
-        if color_sensor.color == turn_left_sig:
+    while col.color not in [go_sig, go_sig_alt, stop_sig]:
+        print("adjust color {}".format(str(col.color)))
+        if col.color == turn_left_sig:
             if facingDirection in [0,3]:
-                motor_l.duty_cycle_sp = 30
+                motor_l.duty_cycle_sp = adjusting_dc
                 motor_r.duty_cycle_sp = 0
             else:
                 motor_l.duty_cycle_sp = 0
-                motor_r.duty_cycle_sp = 30
-        elif color_sensor.color == turn_right_sig:
+                motor_r.duty_cycle_sp = adjusting_dc
+        elif col.color == turn_right_sig:
             if facingDirection in [0,3]:
                 motor_l.duty_cycle_sp = 0
-                motor_r.duty_cycle_sp = 30
+                motor_r.duty_cycle_sp = adjusting_dc
             else:
-                motor_l.duty_cycle_sp = 30
+                motor_l.duty_cycle_sp = adjusting_dc
                 motor_r.duty_cycle_sp = 0
-        sleep(0.1)
+    # if col.color==stop_sig:
+    #     while col.color==stop_sig:
+    #         backup()
+    #         sleep(0.4)
 
 
-def run_by_color():
-    print("color {}".format(str(color_sensor.color)))
-    motor_l.run_direct(duty_cycle_sp=0)
-    motor_r.run_direct(duty_cycle_sp=0)
-    while color_sensor.color !=stop_sig:
-        motor_l.duty_cycle_sp=50
-        motor_r.duty_cycle_sp=50
-        print("going color {}".format(str(color_sensor.color)))
-        if color_sensor.color!=go_sig:
-            if color_sensor.color==stop_sig:
-                stop()
-            else:
-                ajust()
-        sleep(0.1)
-    stop()
+# def run_by_color():
+#     print("color {}".format(str(col.color)))
+#     motor_l.run_direct(duty_cycle_sp=0)
+#     motor_r.run_direct(duty_cycle_sp=0)
+#     while col.color !=stop_sig:
+#         motor_l.duty_cycle_sp=50
+#         motor_r.duty_cycle_sp=50
+#         print("going color {}".format(str(col.color)))
+#         if col.color!=go_sig:
+#             if col.color==stop_sig:
+#                 stop()
+#             else:
+#                 ajust()
+#         sleep(0.1)
+#     stop()
