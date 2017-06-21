@@ -1,5 +1,5 @@
 {
-  "host":"169.254.248.46",
+  "host":"169.254.144.41",
   "port":"8888",
   "motor1":"outC",
   "motor2":"outB",
@@ -12,37 +12,37 @@
   "go_color":"1",
   "go_color_alter":"7",
   "stop_color":"6",
-  "adjusting_dc":"18",
+  "adjusting_dc":"25",
   "default":
   {
     "time_sp":"1000",
     "speed":"500",
-    "duty_cycle_sp":"30",
-    "full_speed":"50",
+    "duty_cycle_sp":"40",
+    "full_speed":"45",
     "slow_down":"0",
     "back_speed":"-30",
     "back_time":"1000"
   },
 "turnLeft": {
-    "time_sp_l":"1000",
-    "time_sp_r":"1000",
+    "time_sp_l":"1800",
+    "time_sp_r":"1800",
     "time_sp_l_2":"1067",
     "time_sp_r_2":"1067",
     "time_sp_1":"1118",
     "speed":"120"
   },
   "turnRight": {
-    "time_sp_l":"1082",
-    "time_sp_r":"1082",
+    "time_sp_l":"1820",
+    "time_sp_r":"1820",
     "time_sp_1":"1118",
     "speed":"120"
   },
   "turn180":{
-    "time_sp_l":"1058",
-    "time_sp_r":"1058",
+    "time_sp_l":"2000",
+    "time_sp_r":"2000",
     "time_sp_1":"1110",
 
-    "speed":"200"
+    "speed":"120"
   },
     "slightTurn":{
 

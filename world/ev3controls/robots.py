@@ -124,6 +124,14 @@ class MyCompanion(object):
         movements.turnleft()
         self.facingDirection=left(self.facingDirection)
 
+    def justLeft(self):
+        movements.turnleft(False)
+        self.facingDirection = left(self.facingDirection)
+
+    def justRight(self):
+        movements.turnRight(False)
+        self.facingDirection = right(self.facingDirection)
+
     def turnRight(self):
         movements.turnright()
         self.facingDirection=right(self.facingDirection)

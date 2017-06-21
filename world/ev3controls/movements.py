@@ -9,7 +9,7 @@ distance_detect=float(config_json["distance_detect"])
 adjusting_dc=float(config_json["adjusting_dc"])
 cm_to_rots=float(config_json["cm_to_rots"])
 duty_diff=float(config_json["duty_diff"])
-color_mode=True
+# color_mode=True
 turn_left_sig=int(config_json["turn_left_color"])
 turn_right_sig=int(config_json["turn_right_color"])
 go_sig=int(config_json["go_color"])
@@ -46,8 +46,8 @@ def wait_till_finish():
 def turn_adjust(left_or_right):
     config_1 = config_json['default']
     duty_cycle= config_1['duty_cycle_sp']
-    if color_mode and col.color != 1:
-        while col.color not in [go_sig,go_sig_alt,turn_right_sig,left_or_right]:
+    if col.color != 1:
+        while col.color not in [go_sig,turn_right_sig,left_or_right]:
             print("color is", col.color)
             print("moving to find black")
             if left_or_right=='right':
@@ -56,12 +56,13 @@ def turn_adjust(left_or_right):
             else:
                 motor_l.run_direct(duty_cycle_sp=duty_cycle)
                 motor_r.run_direct(duty_cycle_sp=0 - int(duty_cycle))
+            sleep(0.2)
         print("color Found is ", col.color)
         motor_r.duty_cycle_sp=0
         motor_l.duty_cycle_sp=0
 
 
-def turnleft():
+def turnleft(color_mode=True):
     config=config_json['turnLeft']
     motor_l.run_timed(time_sp=config['time_sp_l'], speed_sp=config['speed'])
     motor_r.run_timed(time_sp=config['time_sp_r'], speed_sp=0-int(config['speed']))
@@ -70,7 +71,7 @@ def turnleft():
         turn_adjust('left')
 
 
-def turnright():
+def turnright(color_mode=True):
     config = config_json['turnRight']
     motor_r.run_timed(time_sp=config['time_sp_r'], speed_sp=config['speed'])
     motor_l.run_timed(time_sp=config['time_sp_l'], speed_sp=0-int(config['speed']))
@@ -79,8 +80,7 @@ def turnright():
         turn_adjust('right')
 
 
-
-def turnback():
+def turnback(color_mode=True):
     config = config_json['turn180']
     motor_l.run_timed(time_sp=2*int(config['time_sp_l']), speed_sp=0-int(config['speed']))
     motor_r.run_timed(time_sp=2*int(config['time_sp_r']), speed_sp=int(config['speed']))
@@ -192,7 +192,7 @@ def run_by_distance(distance, facingDirection):
     start(0)
     while not float(motor_l.position-starting_posn)>distance_converted:
 
-        if color_mode and col.color not in [go_sig, go_sig_alt]:
+        if col.color not in [go_sig, go_sig_alt]:
             # if col.color==stop_sig:
             #     while col.color==stop_sig:
             #         backup()
